@@ -71,33 +71,11 @@ jobs:
       run: |
         cd client
         npm ci
-      
-   # - name: Run LoginPage Tests
-   #   run: |
-   #     cd client
-   #     npx vitest run src/pages/LoginPage.test.jsx --reporter=verbose --testTimeout=30000
-      
-    - name: Run PacienteDashboard Tests
+        # Reinstala jsdom específicamente
+        npm install jsdom@latest --save-dev
+        
+    - name: Run Frontend Tests
       run: |
         cd client
-        npx vitest run src/pages/dashboard/paciente/PacienteDashboard.test.jsx --reporter=verbose --testTimeout=30000
-      
-    - name: Run CitasPage Tests
-      run: |
-        cd client
-        npx vitest run src/pages/dashboard/paciente/citas/CitasPage.test.jsx --reporter=verbose --testTimeout=30000
-      
-    - name: Run userService Tests
-      run: |
-        cd client
-        npx vitest run src/services/userService.test.js --reporter=verbose --testTimeout=30000
-      
-    - name: Run useFisioterapeutas Tests
-      run: |
-        cd client
-        npx vitest run src/hooks/useFisioterapeutas.test.js --reporter=verbose --testTimeout=30000
-      
-    - name: Run useCitas Tests
-      run: |
-        cd client
-        npx vitest run src/hooks/useCitas.test.js --reporter=verbose --testTimeout=30000
+        # Fuerza el entorno happy-dom en lugar de jsdom
+        npx vitest run --reporter=verbose --environment=happy-dom
