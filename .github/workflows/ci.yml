@@ -73,6 +73,8 @@ jobs:
           npm ci
         
       - name: Run Frontend Tests
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
           cd client
-          npx vitest run --reporter=verbose --no-file-parallelism
+          npx vitest run --pool=forks --no-file-parallelism --reporter=verbose
