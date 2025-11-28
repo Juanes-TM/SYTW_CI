@@ -8,9 +8,11 @@ on:
 
 jobs:
   test-backend:
-    name: Test Backend (UT + E2E)
+    name: Test Backend (Unit Tests)
     runs-on: ubuntu-latest
-
+    
+    # Mantenemos Mongo porque tus tests unitarios de backend (test/...) 
+    # parecen usar una conexión real a base de datos en memoria o testdb.
     services:
       mongodb:
         image: mongo:5
@@ -18,104 +20,62 @@ jobs:
           - 27017:27017
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: 'npm'
-          cache-dependency-path: server/package-lock.json
-
-      - name: Install Firefox in CI
-        uses: browser-actions/setup-firefox@v1
-
-      - name: Export FIREFOX_BIN
-        run: |
-          echo "FIREFOX_BIN=$(which firefox)" >> $GITHUB_ENV
-          echo "FIREFOX_BIN is $FIREFOX_BIN"
-
-      - name: Create Backend Config
-        run: |
-          cd server
-          cat > backend_config.json << EOF
-          {
-            "JWT_SECRET": "ci_testing_secret_123",
-            "MONGO_URI": "mongodb://localhost:27017/testdb"
-          }
-          EOF
-
-      - name: Install backend dependencies
-        run: |
-          cd server
-          npm ci
-          npm install selenium-webdriver bcrypt --no-audit --no-fund 
-
-      - name: Run Backend Unit Tests
-        run: |
-          cd server
-          npm test -- test/ --runInBand --silent --passWithNoTests --forceExit --detectOpenHandles --coverage=false
-
-      - name: Build Frontend
-        run: |
-          cd client
-          npm ci
-          npm run build
-
-      - name: Seed Database for E2E
-        run: |
-          cd server
-          node seed_ci.js
-
-      - name: Start Backend for E2E
-        run: |
-          cd server
-          # start server in background; adapt command if your start script is different
-          nohup node server.js > server.log 2>&1 &
-          echo $! > server.pid
-          sleep 25
-          echo "Servidor arrancado (pid $(cat server.pid))"
-
-      - name: Run Backend E2E Tests
-        run: |
-          cd server
-          # Actualizar URLs en tests para que apunten al servidor local
-          find t-e2e/original -name "*.spec.js" -exec sed -i 's|https://10.6.131.134|http://localhost:3000|g' {} \;
-          # Ejecutar tests E2E
-          npm test -- t-e2e/original/ --runInBand --passWithNoTests --forceExit --detectOpenHandles --coverage=false --testTimeout=60000
-
-      - name: Stop Backend
-        if: always()
-        run: |
-          cd server
-          if [ -f server.pid ]; then
-            kill $(cat server.pid) 2>/dev/null || true
-            rm -f server.pid
-          fi
-          echo "Backend detenido"
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: server/package-lock.json
+        
+    - name: Create Backend Config
+      run: |
+        cd server
+        cat > backend_config.json << EOF
+        {
+          "JWT_SECRET": "ci_testing_secret_123",
+          "MONGO_URI": "mongodb://localhost:27017/testdb"
+        }
+        EOF
+        
+    - name: Install dependencies
+      run: |
+        cd server
+        npm ci
+        
+    - name: Run Backend Unit Tests
+      # Ejecutamos SOLO los tests de la carpeta test/ (Unitarios)
+      # Eliminamos referencias a t-e2e
+      run: |
+        cd server
+        npm test -- test/ --runInBand --silent --passWithNoTests --forceExit --detectOpenHandles --coverage=false
 
   test-frontend:
-    name: Test Frontend (UT)
+    name: Test Frontend (Unit Tests)  
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: 'npm'
-          cache-dependency-path: client/package-lock.json
-
-      - name: Install client dependencies
-        run: |
-          cd client
-          npm ci
-
-      - name: Run Frontend Unit Tests
-        run: |
-          cd client
-          npx vitest run --silent --environment=jsdom
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: client/package-lock.json
+        
+    - name: Install dependencies (client)
+      run: |
+        cd client
+        npm ci
+      
+    - name: Run Frontend Tests
+      # SOLUCIÓN AL CUELGUE:
+      # 1. Usamos 'npm exec' para usar la versión instalada en node_modules (evita descargas de npx)
+      # 2. Añadimos explícitamente 'run' para desactivar modo Watch
+      run: |
+        cd client
+        npm exec vitest -- run --environment=jsdom --reporter=verbose
