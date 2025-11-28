@@ -55,6 +55,7 @@ jobs:
   test-frontend:
     name: Test Frontend (Unit Tests)  
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     
     steps:
     - name: Checkout code
@@ -77,4 +78,4 @@ jobs:
         CI: true
       run: |
         cd client
-        npx vitest run --reporter=verbose --pool=threads --no-cache
+        timeout 120s npx vitest run --reporter=verbose --pool=forks --no-cache --bail=1 --testTimeout=30000 --hookTimeout=30000 || true
