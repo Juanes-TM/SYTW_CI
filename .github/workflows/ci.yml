@@ -78,4 +78,4 @@ jobs:
       # 2. Añadimos explícitamente 'run' para desactivar modo Watch
       run: |
         cd client
-        npm exec vitest -- run --environment=jsdom --reporter=verbose
+        npm exec vitest -- run --environment=jsdom --reporter=verbose 
