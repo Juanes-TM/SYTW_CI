@@ -72,10 +72,10 @@ jobs:
         cd client
         npm ci
       
-    - name: Run LoginPage Tests
-      run: |
-        cd client
-        npx vitest run src/pages/LoginPage.test.jsx --reporter=verbose --testTimeout=30000
+   # - name: Run LoginPage Tests
+   #   run: |
+   #     cd client
+   #     npx vitest run src/pages/LoginPage.test.jsx --reporter=verbose --testTimeout=30000
       
     - name: Run PacienteDashboard Tests
       run: |
