@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 
 // IMPORTANTE: Ajusta esta ruta si tu modelo de usuario está en otra carpeta
 // Por ejemplo: require('./src/models/User') o require('./models/usuario')
-const User = require('./models/User'); 
+const User = require('./models/user'); 
 
 // URI de la base de datos de pruebas (la misma que definiste en el YAML)
 const mongoURI = "mongodb://localhost:27017/testdb";
