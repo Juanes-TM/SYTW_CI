@@ -1,0 +1,103 @@
+version: 2.1
+
+jobs:
+  # ------------------------------------------------------------------
+  # JOB 1: BACKEND (Node + Mongo)
+  # ------------------------------------------------------------------
+  test-backend:
+    docker:
+      # Imagen principal para correr los comandos (Node 18)
+      - image: cimg/node:18.20
+      # Servicio secundario (MongoDB 5) - Equivalente a 'services' en GHA
+      - image: cimg/mongo:5.0
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Restaurar caché de npm para el backend (para ir más rápido)
+      - restore_cache:
+          keys:
+            - v1-backend-deps-{{ checksum "server/package-lock.json" }}
+            - v1-backend-deps-
+
+      - run:
+          name: Install Backend Dependencies
+          command: |
+            cd server
+            npm ci
+
+      # Guardar caché si la instalación fue exitosa
+      - save_cache:
+          paths:
+            - server/node_modules
+            - ~/.npm
+          key: v1-backend-deps-{{ checksum "server/package-lock.json" }}
+
+      - run:
+          name: Create Backend Config
+          command: |
+            cd server
+            cat > backend_config.json << EOF
+            {
+              "JWT_SECRET": "ci_testing_secret_123",
+              "MONGO_URI": "mongodb://localhost:27017/testdb"
+            }
+            EOF
+
+      - run:
+          name: Run Backend Unit Tests
+          command: |
+            cd server
+            npm test -- test/ --runInBand --silent --passWithNoTests --forceExit --detectOpenHandles --coverage=false
+
+  # ------------------------------------------------------------------
+  # JOB 2: FRONTEND (Unit Tests)
+  # ------------------------------------------------------------------
+  test-frontend:
+    docker:
+      # Usamos la variante '-browsers' por si vitest/canvas necesitan librerías del sistema
+      - image: cimg/node:18.20-browsers
+
+    working_directory: ~/repo
+    # Aumentamos recursos si es necesario (medium es el default, large da más RAM)
+    resource_class: medium
+
+    steps:
+      - checkout
+
+      # Restaurar caché de npm para el frontend
+      - restore_cache:
+          keys:
+            - v1-frontend-deps-{{ checksum "client/package-lock.json" }}
+            - v1-frontend-deps-
+
+      - run:
+          name: Install Frontend Dependencies
+          command: |
+            cd client
+            npm ci
+
+      - save_cache:
+          paths:
+            - client/node_modules
+            - ~/.npm
+          key: v1-frontend-deps-{{ checksum "client/package-lock.json" }}
+
+      - run:
+          name: Run Frontend Tests
+          # Mantenemos tus flags de seguridad (forks, timeouts, bail)
+          command: |
+            cd client
+            npx vitest run --reporter=verbose --pool=forks --no-cache --bail=1 --testTimeout=30000 --hookTimeout=30000
+
+# ------------------------------------------------------------------
+# WORKFLOWS (Orquestación)
+# ------------------------------------------------------------------
+workflows:
+  version: 2
+  ci_pipeline:
+    jobs:
+      - test-backend
+      - test-frontend

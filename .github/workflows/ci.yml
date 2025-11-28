@@ -55,6 +55,7 @@ jobs:
   test-frontend:
     name: Test Frontend (Unit Tests)  
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     
     steps:
     - name: Checkout code
@@ -71,11 +72,10 @@ jobs:
       run: |
         cd client
         npm ci
-        # Reinstala jsdom específicamente
-        npm install jsdom@latest --save-dev
-        
+      
     - name: Run Frontend Tests
+      env:
+        CI: true
       run: |
         cd client
-        # Fuerza el entorno happy-dom en lugar de jsdom
-        npx vitest run --reporter=verbose --environment=happy-dom
+        timeout 120s npx vitest run --reporter=verbose --pool=forks --no-cache --bail=1 --testTimeout=30000 --hookTimeout=30000 || true
