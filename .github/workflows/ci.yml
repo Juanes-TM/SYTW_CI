@@ -51,7 +51,7 @@ jobs:
       run: |
         cd server
         npm test -- test/ --runInBand --silent --passWithNoTests --forceExit --detectOpenHandles --coverage=false
-
+        
   test-frontend:
     name: Test Frontend (Unit Tests)  
     runs-on: ubuntu-latest
@@ -75,8 +75,6 @@ jobs:
     - name: Run Frontend Tests
       env:
         CI: true
-        VITEST_MAX_THREADS: 1
-        VITEST_MIN_THREADS: 1
       run: |
         cd client
-        npx vitest run --reporter=verbose --pool=threads --poolOptions.threads.singleThread=true --no-cache
+        npx vitest run --reporter=verbose --pool=threads --singleThread --no-cache
