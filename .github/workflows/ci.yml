@@ -1,7 +1,24 @@
-test-frontend:
-    name: Test Frontend (Unit Tests)  
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ testing, main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-backend:
+    name: Test Backend (Unit Tests)
     runs-on: ubuntu-latest
     
+    # Mantenemos Mongo porque tus tests unitarios de backend (test/...) 
+    # parecen usar una conexión real a base de datos en memoria o testdb.
+    services:
+      mongodb:
+        image: mongo:5
+        ports:
+          - 27017:27017
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -11,18 +28,55 @@ test-frontend:
       with:
         node-version: '18'
         cache: 'npm'
-        cache-dependency-path: client/package-lock.json
+        cache-dependency-path: server/package-lock.json
         
-    - name: Install dependencies (client)
+    - name: Create Backend Config
       run: |
-        cd client
+        cd server
+        cat > backend_config.json << EOF
+        {
+          "JWT_SECRET": "ci_testing_secret_123",
+          "MONGO_URI": "mongodb://localhost:27017/testdb"
+        }
+        EOF
+        
+    - name: Install dependencies
+      run: |
+        cd server
         npm ci
-      
-    - name: Run Frontend Tests
+        
+    - name: Run Backend Unit Tests
+      # Ejecutamos SOLO los tests de la carpeta test/ (Unitarios)
+      # Eliminamos referencias a t-e2e
       run: |
-        cd client
-        # EXPLICACIÓN DE LOS FLAGS:
-        # run: Ejecuta una vez (no watch mode).
-        # --reporter=basic: Imprime logs simples, evita barras de progreso que ensucian el log de CI.
-        # --no-file-parallelism: CRUCIAL. Ejecuta los tests uno a uno para no saturar la CPU del servidor de GitHub.
-        npx vitest run --reporter=basic --no-file-parallelism
+        cd server
+        npm test -- test/ --runInBand --silent --passWithNoTests --forceExit --detectOpenHandles --coverage=false
+
+  test-frontend:
+      name: Test Frontend (Unit Tests)  
+      runs-on: ubuntu-latest
+      
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+          
+      - name: Install dependencies (client)
+        run: |
+          cd client
+          npm ci
+        
+      - name: Run Frontend Tests
+        run: |
+          cd client
+          # EXPLICACIÓN DE LOS FLAGS:
+          # run: Ejecuta una vez (no watch mode).
+          # --reporter=basic: Imprime logs simples, evita barras de progreso que ensucian el log de CI.
+          # --no-file-parallelism: CRUCIAL. Ejecuta los tests uno a uno para no saturar la CPU del servidor de GitHub.
+          npx vitest run --reporter=basic --no-file-parallelism
