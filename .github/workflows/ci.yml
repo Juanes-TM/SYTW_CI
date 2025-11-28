@@ -63,6 +63,11 @@ jobs:
           npm ci
           npm run build
 
+      - name: Seed Database for E2E
+        run: |
+          cd server
+          node seed_ci.js
+
       - name: Start Backend for E2E
         run: |
           cd server
