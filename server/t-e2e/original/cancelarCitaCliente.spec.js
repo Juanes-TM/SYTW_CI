@@ -28,10 +28,14 @@ describe('CancelarCitaCliente', function() {
     await driver.findElement(By.css(".w-full:nth-child(2)")).sendKeys("123456");
     await driver.findElement(By.css("button[type='submit']")).click();
     // Esperar a que cargue el dashboard
-    await driver.sleep(5000);
+    const reservarcita_link = await driver.wait(
+        until.elementLocated(By.linkText("Reservar cita")),
+        15000, // Tiempo máximo de espera: 15 segundos
+        'No se pudo encontrar el enlace "Reservar cita" después de iniciar sesión.'
+    );
     // Usar el enlace exacto
-    await driver.findElement(By.linkText("Reservar cita")).click();
-    await driver.sleep(3000);
+    await reservarcita_link.click();
+    await driver.sleep(3000); // Pequeña pausa opcional después del clic
     // Continuar con el resto del flujo original
     await driver.findElement(By.css(".border-gray-300")).click();
     {
