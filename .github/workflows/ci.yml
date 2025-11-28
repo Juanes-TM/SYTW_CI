@@ -77,4 +77,4 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: |
           cd client
-          npx vitest run --pool=forks --no-file-parallelism --reporter=verbose
+          npx vitest run --reporter=verbose --no-watch
