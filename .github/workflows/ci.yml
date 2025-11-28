@@ -53,28 +53,30 @@ jobs:
         npm test -- test/ --runInBand --silent --passWithNoTests --forceExit --detectOpenHandles --coverage=false
 
   test-frontend:
-      name: Test Frontend (Unit Tests)  
-      runs-on: ubuntu-latest
-      
-      steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: client/package-lock.json
-          
-      - name: Install dependencies (client)
-        run: |
-          cd client
-          npm ci
+    name: Test Frontend (Unit Tests)  
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: client/package-lock.json
         
-      - name: Run Frontend Tests
-        env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
-        run: |
-          cd client
-          npx vitest run --reporter=verbose --no-watch
+    - name: Install dependencies (client)
+      run: |
+        cd client
+        npm ci
+      
+    - name: Run Frontend Tests
+      env:
+        CI: true
+        VITEST_MAX_THREADS: 1
+        VITEST_MIN_THREADS: 1
+      run: |
+        cd client
+        npx vitest run --reporter=verbose --pool=threads --poolOptions.threads.singleThread=true --no-cache
