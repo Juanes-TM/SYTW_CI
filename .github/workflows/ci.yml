@@ -75,8 +75,4 @@ jobs:
       - name: Run Frontend Tests
         run: |
           cd client
-          # EXPLICACIÓN DE LOS FLAGS:
-          # run: Ejecuta una vez (no watch mode).
-          # --reporter=basic: Imprime logs simples, evita barras de progreso que ensucian el log de CI.
-          # --no-file-parallelism: CRUCIAL. Ejecuta los tests uno a uno para no saturar la CPU del servidor de GitHub.
-          npx vitest run --reporter=basic --no-file-parallelism
+          npx vitest run --reporter=verbose --no-file-parallelism
