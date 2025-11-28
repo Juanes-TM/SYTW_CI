@@ -28,9 +28,11 @@ jobs:
         cache: 'npm'
         cache-dependency-path: server/package-lock.json
         
-    # CAMBIO: Usar Chrome en lugar de Firefox
+    # CAMBIO: Usar Chrome versión específica
     - name: Setup Chrome
       uses: browser-actions/setup-chrome@latest
+      with:
+        chrome-version: 137
       
     - name: Create Backend Config File
       run: |
@@ -46,8 +48,8 @@ jobs:
       run: |
         cd server
         npm ci
-        # Instalar dependencias de Selenium para E2E
-        npm install selenium-webdriver chromedriver
+        # CAMBIO: Instalar versión compatible de ChromeDriver
+        npm install selenium-webdriver chromedriver@137.0.0
         
     - name: Run Unit Tests
       run: |
@@ -63,22 +65,15 @@ jobs:
     - name: Start Server for E2E Tests
       run: |
         cd server
-        # Iniciar servidor con más tiempo de espera
         node server.js &
         echo $! > server.pid
-        # ESPERAR MÁS TIEMPO - crucial para que el servidor esté listo
         sleep 30
-        # Verificar que el servidor está respondiendo
-        curl -f http://localhost:3000/api/fisioterapeutas || echo "Server might still be starting..."
+        curl -f http://localhost:3000/api/fisioterapeutas || echo "Server check completed"
       
     - name: Run E2E Tests
       run: |
         cd server
-        # CAMBIO: Timeout aumentado para tests E2E
         npm test -- t-e2e/original/ --runInBand --passWithNoTests --forceExit --detectOpenHandles --coverage=false --testTimeout=90000
-      env:
-        # Variables para mejorar performance
-        NODE_OPTIONS: "--max-old-space-size=4096"
       
     - name: Stop Server
       if: always()
