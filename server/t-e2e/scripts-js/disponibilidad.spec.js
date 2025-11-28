@@ -3,6 +3,7 @@
 const { Builder, By, Key, until } = require('selenium-webdriver')
 const assert = require('assert')
 const firefox = require('selenium-webdriver/firefox')
+console.log("USANDO FIREFOX:", process.env.FIREFOX_BIN);
 
 describe('disponibilidad', function() {
   jest.setTimeout(30000)

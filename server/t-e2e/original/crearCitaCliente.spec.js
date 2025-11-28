@@ -1,75 +1,57 @@
-const { createFirefoxDriver, By, Key, until, login } = require('../setup-firefox');
+// server/t-e2e/original/crearCitaCliente.spec.js
+const { Builder, By, Key, until } = require('selenium-webdriver');
 const assert = require('assert');
+const firefox = require('selenium-webdriver/firefox');
+const { createDriver } = require('../driver');
 
-jest.setTimeout(120000);
+console.log("USANDO FIREFOX:", process.env.FIREFOX_BIN);
 
 describe('CrearCitaCliente', function() {
+  jest.setTimeout(60000);
   let driver;
   let vars;
-  
+
   beforeEach(async function() {
-    driver = await createFirefoxDriver();
+    driver = await createDriver();
     vars = {};
   });
-  
+
   afterEach(async function() {
-    if (driver) { 
-      try {
-        await driver.quit(); 
-      } catch (error) {
-        console.log('Error quitting driver:', error);
-      }
-    }
+    if (driver) await driver.quit();
   });
-  
+
   it('CrearCitaCliente', async function() {
-    // Login como cliente
-    const loginSuccess = await login(driver, "nano@ull.es", "123456");
-    if (!loginSuccess) {
-      throw new Error('Login failed');
-    }
-    
+    await driver.get("https://10.6.131.134/login");
+    await driver.manage().window().setRect({ width: 1070, height: 1063 });
+
+    // Login - usar los selectores originales que funcionaban
+    await driver.findElement(By.css(".w-full:nth-child(1)")).sendKeys("nano@ull.es");
+    await driver.findElement(By.css(".w-full:nth-child(2)")).sendKeys("123456");
+    await driver.findElement(By.css("button[type='submit']")).click();
+
+    // Esperar a que cargue el dashboard
+    await driver.sleep(5000);
+
+    // Usar el enlace exacto que encontramos en el diagnóstico
+    await driver.findElement(By.linkText("Reservar cita")).click();
+
     await driver.sleep(3000);
-    
-    // Navegar a Reservar cita
-    try {
-      await driver.wait(until.elementLocated(By.linkText("Reservar cita")), 15000);
-      await driver.findElement(By.linkText("Reservar cita")).click();
-    } catch (error) {
-      const reservarBtn = await driver.findElement(By.css('[href*="reservar"], [class*="reservar"]'));
-      await reservarBtn.click();
-    }
-    
-    await driver.wait(until.elementLocated(By.css(".border-gray-300")), 10000);
+
+    // Continuar con el resto del flujo original
     await driver.findElement(By.css(".border-gray-300")).click();
-    
     {
       const dropdown = await driver.findElement(By.css(".border-gray-300"));
       await dropdown.findElement(By.xpath("//option[. = 'fisio1 uno']")).click();
     }
-    
     await driver.findElement(By.css("option:nth-child(2)")).click();
     await driver.findElement(By.css(".hover\\3A bg-teal-600")).click();
-    
-    await driver.wait(until.elementLocated(By.css(".grid:nth-child(3) > .border:nth-child(2)")), 10000);
     await driver.findElement(By.css(".grid:nth-child(3) > .border:nth-child(2)")).click();
-    
-    await driver.wait(until.elementLocated(By.css("div:nth-child(1) > .w-full")), 5000);
     await driver.findElement(By.css("div:nth-child(1) > .w-full")).click();
     await driver.findElement(By.css("div:nth-child(1) > .w-full")).sendKeys("Necesito una revisión");
-    
-    await driver.wait(until.elementLocated(By.css(".bg-teal-600")), 5000);
     await driver.findElement(By.css(".bg-teal-600")).click();
-    
     await driver.executeScript("window.scrollTo(0,48)");
-    
-    await driver.wait(until.elementLocated(By.css(".text-indigo-700")), 5000);
     await driver.findElement(By.css(".text-indigo-700")).click();
-    
-    await driver.wait(until.elementLocated(By.css(".hover\\3A bg-gray-200")), 5000);
     await driver.findElement(By.css(".hover\\3A bg-gray-200")).click();
-    
-    await driver.wait(until.elementLocated(By.css(".bg-red-600")), 5000);
     await driver.findElement(By.css(".bg-red-600")).click();
   });
 });

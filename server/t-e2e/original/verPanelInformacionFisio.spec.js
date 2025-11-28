@@ -1,55 +1,40 @@
-const { createFirefoxDriver, By, Key, until, login } = require('../setup-firefox');
+// server/t-e2e/original/verPanelInformacionFisio.spec.js
+const { Builder, By, Key, until } = require('selenium-webdriver');
 const assert = require('assert');
+const firefox = require('selenium-webdriver/firefox');
+const { createDriver } = require('../driver');
 
-jest.setTimeout(120000);
+console.log("USANDO FIREFOX:", process.env.FIREFOX_BIN);
 
 describe('VerPanelInformacionFisio', function() {
+  jest.setTimeout(30000);
   let driver;
   let vars;
-  
+
   beforeEach(async function() {
-    driver = await createFirefoxDriver();
+    driver = await createDriver();
     vars = {};
   });
-  
+
   afterEach(async function() {
-    if (driver) { 
-      try {
-        await driver.quit(); 
-      } catch (error) {
-        console.log('Error quitting driver:', error);
-      }
-    }
+    if (driver) await driver.quit();
   });
-  
+
   it('VerPanelInformacionFisio', async function() {
-    // Login como fisio
-    const loginSuccess = await login(driver, "fisio1@ull.es", "123456");
-    if (!loginSuccess) {
-      throw new Error('Login failed');
-    }
-    
-    await driver.sleep(3000);
-    
-    // Navegar a Panel de Información
-    try {
-      await driver.wait(until.elementLocated(By.linkText("Panel de Información")), 15000);
-      await driver.findElement(By.linkText("Panel de Información")).click();
-    } catch (error) {
-      const panelBtn = await driver.findElement(By.css('[href*="panel"], [class*="panel"], [class*="informacion"]'));
-      await panelBtn.click();
-    }
-    
-    await driver.wait(until.elementLocated(By.css(".bg-white:nth-child(1) .flex > .text-sm")), 10000);
+    await driver.get("https://10.6.131.134/");
+    await driver.manage().window().setRect({ width: 979, height: 1063 });
+    await driver.findElement(By.css(".w-full:nth-child(1)")).click();
+    await driver.findElement(By.css(".w-full:nth-child(1)")).sendKeys("fisio1@ull.es");
+    await driver.findElement(By.css(".w-full:nth-child(2)")).click();
+    await driver.findElement(By.css(".w-full:nth-child(2)")).sendKeys("123456");
+    await driver.findElement(By.css(".bg-teal-600")).click();
+    await driver.findElement(By.linkText("Panel de Información")).click();
     await driver.findElement(By.css(".bg-white:nth-child(1) .flex > .text-sm")).click();
     await driver.findElement(By.css(".bg-white:nth-child(1) .flex > .text-sm")).click();
-    
     await driver.findElement(By.css(".bg-white:nth-child(2) .flex > .text-sm")).click();
     await driver.findElement(By.css(".bg-white:nth-child(2) .flex > .text-sm")).click();
-    
     await driver.findElement(By.css(".bg-white:nth-child(4) .flex > .text-sm")).click();
     await driver.findElement(By.css(".bg-white:nth-child(4) .flex > .text-sm")).click();
-    
     await driver.findElement(By.css(".p-2:nth-child(1) .font-bold")).click();
     await driver.findElement(By.css(".py-1:nth-child(2)")).click();
     await driver.findElement(By.css(".rounded-md:nth-child(1)")).click();

@@ -1,63 +1,44 @@
-const { createFirefoxDriver, By, Key, until, login } = require('../setup-firefox');
+// server/t-e2e/original/verCalendarioCliente.spec.js
+const { Builder, By, Key, until } = require('selenium-webdriver');
 const assert = require('assert');
+const firefox = require('selenium-webdriver/firefox');
+const { createDriver } = require('../driver');
 
-jest.setTimeout(120000);
+console.log("USANDO FIREFOX:", process.env.FIREFOX_BIN);
 
 describe('VerCalendarioCliente', function() {
+  jest.setTimeout(30000);
   let driver;
   let vars;
-  
+
   beforeEach(async function() {
-    driver = await createFirefoxDriver();
+    driver = await createDriver();
     vars = {};
   });
-  
+
   afterEach(async function() {
-    if (driver) { 
-      try {
-        await driver.quit(); 
-      } catch (error) {
-        console.log('Error quitting driver:', error);
-      }
-    }
+    if (driver) await driver.quit();
   });
-  
+
   it('VerCalendarioCliente', async function() {
-    // Login como cliente
-    const loginSuccess = await login(driver, "nano@ull.es", "123456");
-    if (!loginSuccess) {
-      throw new Error('Login failed');
-    }
-    
-    await driver.sleep(3000);
-    
-    // Interactuar con calendario
+    await driver.get("https://10.6.131.134/");
+    await driver.manage().window().setRect({ width: 1854, height: 1048 });
+    await driver.findElement(By.css(".w-full:nth-child(1)")).click();
+    await driver.findElement(By.css(".w-full:nth-child(1)")).sendKeys("nano@ull.es");
+    await driver.findElement(By.css(".w-full:nth-child(2)")).click();
+    await driver.findElement(By.css(".w-full:nth-child(2)")).sendKeys("123456");
+    await driver.findElement(By.css(".bg-teal-600")).click();
     await driver.findElement(By.css(".space-y-6")).click();
     await driver.findElement(By.css(".flex:nth-child(3) > span")).click();
-    
-    await driver.wait(until.elementLocated(By.css(".h-\\[120px\\]:nth-child(26) .text-left:nth-child(1)")), 10000);
     await driver.findElement(By.css(".h-\\[120px\\]:nth-child(26) .text-left:nth-child(1)")).click();
-    
     await driver.findElement(By.css(".border-gray-300")).click();
-    
-    await driver.wait(until.elementLocated(By.css(".h-\\[120px\\]:nth-child(24) .text-left")), 5000);
     await driver.findElement(By.css(".h-\\[120px\\]:nth-child(24) .text-left")).click();
-    
     await driver.findElement(By.css(".border-gray-300")).click();
-    
-    await driver.wait(until.elementLocated(By.css(".h-\\[120px\\]:nth-child(33) > .text-xs")), 5000);
     await driver.findElement(By.css(".h-\\[120px\\]:nth-child(33) > .text-xs")).click();
-    
-    await driver.wait(until.elementLocated(By.css(".space-y-1:nth-child(2) > .w-full")), 5000);
     await driver.findElement(By.css(".space-y-1:nth-child(2) > .w-full")).click();
-    
     await driver.findElement(By.css(".border-gray-300")).click();
-    
     await driver.findElement(By.css(".p-2:nth-child(3)")).click();
-    
-    await driver.wait(until.elementLocated(By.css(".h-\\[120px\\]:nth-child(4) .text-left")), 5000);
     await driver.findElement(By.css(".h-\\[120px\\]:nth-child(4) .text-left")).click();
-    
     await driver.findElement(By.css(".border-gray-300")).click();
   });
 });

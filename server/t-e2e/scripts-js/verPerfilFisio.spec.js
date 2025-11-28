@@ -3,6 +3,7 @@
 const { Builder, By, Key, until } = require('selenium-webdriver')
 const assert = require('assert')
 const firefox = require('selenium-webdriver/firefox')
+console.log("USANDO FIREFOX:", process.env.FIREFOX_BIN);
 
 describe('VerPerfilFisio', function() {
   jest.setTimeout(60000)

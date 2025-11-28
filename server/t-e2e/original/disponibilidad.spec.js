@@ -1,58 +1,40 @@
-const { createFirefoxDriver, By, Key, until, login } = require('../setup-firefox');
+// server/t-e2e/original/disponibilidad.spec.js
+const { Builder, By, Key, until } = require('selenium-webdriver');
 const assert = require('assert');
+const firefox = require('selenium-webdriver/firefox');
+const { createDriver } = require('../driver');
 
-jest.setTimeout(120000);
+console.log("USANDO FIREFOX:", process.env.FIREFOX_BIN);
 
 describe('disponibilidad', function() {
+  jest.setTimeout(30000);
   let driver;
   let vars;
-  
+
   beforeEach(async function() {
-    driver = await createFirefoxDriver();
+    driver = await createDriver();
     vars = {};
   });
-  
+
   afterEach(async function() {
-    if (driver) { 
-      try {
-        await driver.quit(); 
-      } catch (error) {
-        console.log('Error quitting driver:', error);
-      }
-    }
+    if (driver) await driver.quit();
   });
-  
+
   it('disponibilidad', async function() {
-    // Login como fisio
-    const loginSuccess = await login(driver, "fisio1@ull.es", "123456");
-    if (!loginSuccess) {
-      throw new Error('Login failed');
-    }
-    
-    await driver.sleep(3000);
-    
-    // Navegar a Disponibilidad
-    try {
-      await driver.wait(until.elementLocated(By.linkText("Disponibilidad")), 15000);
-      await driver.findElement(By.linkText("Disponibilidad")).click();
-    } catch (error) {
-      const disponibilidadBtn = await driver.findElement(By.css('[href*="disponibilidad"], [class*="disponibilidad"]'));
-      await disponibilidadBtn.click();
-    }
-    
-    await driver.wait(until.elementLocated(By.css(".border:nth-child(1) .text-sm")), 10000);
+    await driver.get("https://10.6.131.134/");
+    await driver.manage().window().setRect({ width: 1854, height: 1048 });
+    await driver.findElement(By.css(".w-full:nth-child(1)")).click();
+    await driver.findElement(By.css(".w-full:nth-child(1)")).sendKeys("fisio1@ull.es");
+    await driver.findElement(By.css(".w-full:nth-child(2)")).click();
+    await driver.findElement(By.css(".w-full:nth-child(2)")).sendKeys("123456");
+    await driver.findElement(By.css(".bg-teal-600")).click();
+    await driver.findElement(By.linkText("Disponibilidad")).click();
     await driver.findElement(By.css(".border:nth-child(1) .text-sm")).click();
-    
-    await driver.wait(until.elementLocated(By.css(".ml-auto")), 5000);
     await driver.findElement(By.css(".ml-auto")).click();
-    
     await driver.findElement(By.css(".border:nth-child(1) .text-sm")).click();
-    
-    await driver.wait(until.elementLocated(By.css(".px-4")), 5000);
     await driver.findElement(By.css(".px-4")).click();
     await driver.findElement(By.css(".px-4")).click();
     await driver.findElement(By.css(".px-4")).click();
-    
     await driver.findElement(By.css(".w-full")).click();
   });
 });
