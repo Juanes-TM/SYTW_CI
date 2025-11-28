@@ -1,51 +1,65 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
-// IMPORTANTE: Ajusta esta ruta si tu modelo de usuario está en otra carpeta
-// Por ejemplo: require('./src/models/User') o require('./models/usuario')
+// Asegúrate de que la ruta coincida con el nombre del archivo real (minúscula 'user')
 const User = require('./models/user'); 
 
-// URI de la base de datos de pruebas (la misma que definiste en el YAML)
 const mongoURI = "mongodb://localhost:27017/testdb";
 
 async function seed() {
   try {
-    // 1. Conectar a MongoDB
     await mongoose.connect(mongoURI);
     console.log("🌱 Conectado a MongoDB para sembrar datos...");
 
-    // 2. Limpiar la base de datos para asegurar que está limpia
     await mongoose.connection.db.dropDatabase();
     console.log("🧹 Base de datos limpiada.");
 
-    // 3. Encriptar la contraseña MANUALMENTE
-    // Como estamos inyectando datos directamente a la BD y no pasando por el registro de la app,
-    // tenemos que hacer el hash nosotros mismos.
+    // Generar hash para la contraseña "123456"
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash("123456", salt);
 
-    // 4. Crear el usuario administrador/cliente
+    // Crear usuario adaptado EXACTAMENTE a tu Schema
     const usuario = new User({
-      name: "Nano Test",
-      email: "nano@ull.es",
-      password: hashedPassword, // Guardamos la contraseña YA encriptada
-      role: "cliente",          // Asegúrate de que este rol exista en tu lógica
-      telefono: "123456789",    // Añado campos comunes por si acaso son requeridos
-      confirmed: true           // Si tienes confirmación de email, ponlo en true
+      nombre: "Nano",           // Schema: required: true
+      apellido: "Test",         // Schema: required: true
+      email: "nano@ull.es",     // Schema: required: true
+      password: hashedPassword, // Schema: required: true
+      telephone: "600123456",   // Schema: required: true (ojo: es 'telephone', no 'telefono')
+      rol: "cliente",           // Schema: enum ['cliente', ...], default 'cliente'
+      especialidad: null        // Opcional
     });
 
     await usuario.save();
-    console.log("✅ Usuario 'nano@ull.es' creado con password '123456' (hasheado).");
+    console.log("✅ Usuario 'nano@ull.es' creado con éxito.");
 
-    // --- AQUÍ PUEDES AÑADIR MÁS DATOS SI LOS NECESITAS (Fisios, Citas, etc.) ---
+    // --- (Opcional) Crear un Fisioterapeuta para pruebas ---
+    // Si tus tests necesitan un fisio, descomenta esto:
+    /*
+    const fisio = new User({
+      nombre: "Fisio",
+      apellido: "Uno",
+      email: "fisio@ull.es",
+      password: hashedPassword,
+      telephone: "600999888",
+      rol: "fisioterapeuta",
+      especialidad: "General"
+    });
+    await fisio.save();
+    console.log("✅ Usuario 'fisio@ull.es' creado.");
+    */
 
-    // 5. Cerrar conexión
     await mongoose.disconnect();
     console.log("👋 Seed completado con éxito.");
     process.exit(0);
 
   } catch (error) {
     console.error("❌ Error durante el seed:", error);
+    // Imprimir detalles de validación si existen
+    if (error.errors) {
+        Object.keys(error.errors).forEach(key => {
+            console.error(`   -> Campo '${key}': ${error.errors[key].message}`);
+        });
+    }
     process.exit(1);
   }
 }
