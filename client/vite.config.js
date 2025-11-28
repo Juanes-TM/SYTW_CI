@@ -5,17 +5,10 @@ export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'happy-dom', // Cambia de jsdom a happy-dom
     setupFiles: './src/setupTests.js',
     css: true,
     testTimeout: 30000,
     hookTimeout: 30000,
-    teardownTimeout: 10000,
-    pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true
-      }
-    }
   },
 })
