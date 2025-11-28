@@ -28,21 +28,20 @@ jobs:
         cache: 'npm'
         cache-dependency-path: server/package-lock.json
         
-    # SOLUCIÓN: Usar Firefox que es más estable
     - name: Setup Firefox
       uses: browser-actions/setup-firefox@v1
       
-    - name: Create Backend Config File
+    - name: Create Backend Config
       run: |
         cd server
         cat > backend_config.json << EOF
         {
-          "JWT_SECRET": "ci_testing_secret_123", 
+          "JWT_SECRET": "ci_testing_secret_123",
           "MONGO_URI": "mongodb://localhost:27017/testdb"
         }
         EOF
         
-    - name: Install dependencies (server)
+    - name: Install dependencies
       run: |
         cd server
         npm ci
@@ -53,7 +52,7 @@ jobs:
         cd server
         npm test -- test/ --runInBand --silent --passWithNoTests --forceExit --detectOpenHandles --coverage=false
       
-    - name: Build Frontend for E2E Tests
+    - name: Build Frontend
       run: |
         cd client
         npm ci
@@ -64,16 +63,16 @@ jobs:
         cd server
         node server.js &
         echo $! > server.pid
-        # Esperar suficiente tiempo para que el servidor esté listo
         sleep 30
-        # Verificar que el servidor responde
-        curl -f http://localhost:3000/api/fisioterapeutas || echo "Server might be starting..."
+        echo "Server started on port 3000"
       
-    - name: Run E2E Tests with Firefox
+    - name: Run E2E Tests
       run: |
         cd server
-        # Ejecutar tests E2E con Firefox
-        npm test -- t-e2e/original/ --runInBand --passWithNoTests --forceExit --detectOpenHandles --coverage=false --testTimeout=120000
+        # Actualizar URLs en tests scripts-js
+        find t-e2e/scripts-js -name "*.spec.js" -exec sed -i 's|https://10.6.131.134|http://localhost:3000|g' {} \;
+        # Ejecutar tests
+        npm test -- t-e2e/scripts-js/ --runInBand --passWithNoTests --forceExit --detectOpenHandles --coverage=false --testTimeout=60000
       
     - name: Stop Server
       if: always()
@@ -104,7 +103,7 @@ jobs:
         cd client
         npm ci
       
-    - name: Run Frontend Tests (Vitest/React)
+    - name: Run Frontend Tests
       run: |
         cd client
         npx vitest run --silent --environment=jsdom
