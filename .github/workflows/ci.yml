@@ -55,7 +55,6 @@ jobs:
   test-frontend:
     name: Test Frontend (Unit Tests)  
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     
     steps:
     - name: Checkout code
@@ -73,9 +72,32 @@ jobs:
         cd client
         npm ci
       
-    - name: Run Frontend Tests
-      env:
-        CI: true
+    - name: Run LoginPage Tests
       run: |
         cd client
-        timeout 120s npx vitest run --reporter=verbose --pool=forks --no-cache --bail=1 --testTimeout=30000 --hookTimeout=30000 || true
+        npx vitest run src/pages/LoginPage.test.jsx --reporter=verbose --testTimeout=30000
+      
+    - name: Run PacienteDashboard Tests
+      run: |
+        cd client
+        npx vitest run src/pages/dashboard/paciente/PacienteDashboard.test.jsx --reporter=verbose --testTimeout=30000
+      
+    - name: Run CitasPage Tests
+      run: |
+        cd client
+        npx vitest run src/pages/dashboard/paciente/citas/CitasPage.test.jsx --reporter=verbose --testTimeout=30000
+      
+    - name: Run userService Tests
+      run: |
+        cd client
+        npx vitest run src/services/userService.test.js --reporter=verbose --testTimeout=30000
+      
+    - name: Run useFisioterapeutas Tests
+      run: |
+        cd client
+        npx vitest run src/hooks/useFisioterapeutas.test.js --reporter=verbose --testTimeout=30000
+      
+    - name: Run useCitas Tests
+      run: |
+        cd client
+        npx vitest run src/hooks/useCitas.test.js --reporter=verbose --testTimeout=30000
