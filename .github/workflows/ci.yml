@@ -1,4 +1,4 @@
-name: CI Pipeline Fixed
+name: CI Pipeline
 
 on:
   push:
@@ -28,25 +28,16 @@ jobs:
         cache: 'npm'
         cache-dependency-path: server/package-lock.json
         
-    # SOLUCIÓN: Instalar Chrome manualmente con versión exacta
-    - name: Install Chrome 137
-      run: |
-        wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-        echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' | sudo tee /etc/apt/sources.list.d/google-chrome.list
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable=137.0.6943.120-1
-        
-    - name: Verify Chrome version
-      run: |
-        google-chrome-stable --version
-        which google-chrome-stable
+    # SOLUCIÓN: Usar Firefox que es más estable
+    - name: Setup Firefox
+      uses: browser-actions/setup-firefox@v1
       
     - name: Create Backend Config File
       run: |
         cd server
         cat > backend_config.json << EOF
         {
-          "JWT_SECRET": "ci_testing_secret_123",
+          "JWT_SECRET": "ci_testing_secret_123", 
           "MONGO_URI": "mongodb://localhost:27017/testdb"
         }
         EOF
@@ -55,9 +46,7 @@ jobs:
       run: |
         cd server
         npm ci
-        # Instalar ChromeDriver que coincida con Chrome 137
         npm install selenium-webdriver
-        npx -y chromedriver@137.0.0 --version
         
     - name: Run Unit Tests
       run: |
@@ -75,13 +64,16 @@ jobs:
         cd server
         node server.js &
         echo $! > server.pid
+        # Esperar suficiente tiempo para que el servidor esté listo
         sleep 30
-        curl -f http://localhost:3000/api/fisioterapeutas || echo "Server check completed"
+        # Verificar que el servidor responde
+        curl -f http://localhost:3000/api/fisioterapeutas || echo "Server might be starting..."
       
-    - name: Run E2E Tests
+    - name: Run E2E Tests with Firefox
       run: |
         cd server
-        npm test -- t-e2e/original/ --runInBand --passWithNoTests --forceExit --detectOpenHandles --coverage=false --testTimeout=90000
+        # Ejecutar tests E2E con Firefox
+        npm test -- t-e2e/original/ --runInBand --passWithNoTests --forceExit --detectOpenHandles --coverage=false --testTimeout=120000
       
     - name: Stop Server
       if: always()

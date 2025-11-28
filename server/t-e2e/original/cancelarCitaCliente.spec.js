@@ -1,14 +1,14 @@
-const { createChromeDriver, By, Key, until, login } = require('../setup-chrome');
+const { createFirefoxDriver, By, Key, until, login } = require('../setup-firefox');
 const assert = require('assert');
 
-jest.setTimeout(90000);
+jest.setTimeout(120000);
 
 describe('CancelarCitaCliente', function() {
   let driver;
   let vars;
   
   beforeEach(async function() {
-    driver = await createChromeDriver();
+    driver = await createFirefoxDriver();
     vars = {};
   });
   
